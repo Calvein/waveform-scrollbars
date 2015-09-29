@@ -1,0 +1,18 @@
+{
+  "name": "waveform-scrollbars",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "beefy index.js:bundle.js -- -t babelify",
+    "build": "browserify index.js -t babelify > bundle.js"
+  },
+  "author": "François Robichet <@calvein>",
+  "license": "ISC",
+  "dependencies": {
+    "soundcloud-badge": "^1.0.0"
+  },
+  "devDependencies": {
+    "babelify": "^6.3.0"
+  }
+}
