@@ -11,6 +11,8 @@ var _soundcloudBadge2 = _interopRequireDefault(_soundcloudBadge);
 var url = 'http://soundcloud.com/edbangerrecords/breakbot-back-for-more';
 var clientId = '5247b2c9dddfe7afb755c75a6198999d';
 var body = document.body;
+// When the user don't have scrollbars
+var defaultWidth = 980;
 
 // Audio variables
 var audio = new Audio();
@@ -22,9 +24,6 @@ source.connect(audioCtx.destination);
 source.connect(analyser);
 var bufferLength = analyser.frequencyBinCount;
 
-// Instructions
-var instructions = document.createElement('span');
-body.appendChild(instructions);
 (0, _soundcloudBadge2['default'])({
     client_id: clientId,
     song: url,
@@ -32,9 +31,7 @@ body.appendChild(instructions);
 }, function (err, streamUrl) {
     if (err) throw err;
     audio.src = streamUrl;
-    if (setScrollbars()) {
-        instructions.textContent = 'Press space or click to start playing';
-    }
+    setScrollbars();
 });
 
 var data = new Uint8Array(bufferLength);
@@ -63,6 +60,14 @@ var scrollbars = undefined;
 var setScrollbars = function setScrollbars() {
     body.style.overflowY = 'scroll';
     var scrollbarWidth = window.innerWidth - body.clientWidth;
+    var hasScrollbars = true;
+    body.style.overflow = 'auto';
+
+    if (scrollbarWidth <= 1) {
+        scrollbarWidth = defaultWidth;
+        hasScrollbars = false;
+    }
+
     // +1 because we're removing the body scrollbar afterwards
     nbScrollbars = Math.floor(body.clientWidth / scrollbarWidth) + 1;
     scrollbars = [];
@@ -72,22 +77,15 @@ var setScrollbars = function setScrollbars() {
         el.remove();
     });
 
-    if (isFinite(nbScrollbars)) {
-        body.style.overflow = 'auto';
-
-        var i = nbScrollbars;
-        while (i--) {
-            var el = document.createElement('u');
-            body.appendChild(el);
-            setScrollbarHeight(el);
-            scrollbars.push(el);
+    var i = nbScrollbars;
+    while (i--) {
+        var el = document.createElement('u');
+        body.appendChild(el);
+        setScrollbarHeight(el);
+        if (!hasScrollbars) {
+            el.style.width = defaultWidth + 'px';
         }
-
-        return true;
-    } else {
-        alert('It can\'t work since you don\'t have scrollbars.');
-
-        return false;
+        scrollbars.push(el);
     }
 };
 
@@ -105,7 +103,8 @@ window.addEventListener('resize', function (e) {
 // Play/pause on space or click
 var togglePlay = function togglePlay() {
     if (audio.paused) {
-        instructions.remove();
+        var intro = document.querySelector('span');
+        intro && intro.remove();
         audio.play();
         tick();
     } else {

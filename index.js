@@ -4,6 +4,8 @@ import getSongData from 'soundcloud-badge'
 const url = 'http://soundcloud.com/edbangerrecords/breakbot-back-for-more'
 const clientId = '5247b2c9dddfe7afb755c75a6198999d'
 const body = document.body
+// When the user don't have scrollbars
+const defaultWidth = 980
 
 // Audio variables
 let audio = new Audio()
@@ -15,9 +17,6 @@ source.connect(audioCtx.destination)
 source.connect(analyser)
 const bufferLength = analyser.frequencyBinCount
 
-// Instructions
-let instructions = document.createElement('span')
-body.appendChild(instructions)
 getSongData({
     client_id: clientId
   , song: url
@@ -25,9 +24,7 @@ getSongData({
 }, (err, streamUrl) => {
     if (err) throw err
     audio.src = streamUrl
-    if (setScrollbars()) {
-        instructions.textContent = 'Press space or click to start playing'
-    }
+    setScrollbars()
 })
 
 let data = new Uint8Array(bufferLength)
@@ -57,6 +54,14 @@ let scrollbars
 const setScrollbars = () => {
     body.style.overflowY = 'scroll'
     let scrollbarWidth = window.innerWidth - body.clientWidth
+    let hasScrollbars = true
+    body.style.overflow = 'auto'
+
+    if (scrollbarWidth <= 1) {
+        scrollbarWidth = defaultWidth
+        hasScrollbars = false
+    }
+
     // +1 because we're removing the body scrollbar afterwards
     nbScrollbars = Math.floor(body.clientWidth / scrollbarWidth) + 1
     scrollbars = []
@@ -66,23 +71,17 @@ const setScrollbars = () => {
         el.remove()
     })
 
-    if (isFinite(nbScrollbars)) {
-        body.style.overflow = 'auto'
-
-        let i = nbScrollbars
-        while(i--) {
-            let el = document.createElement('u')
-            body.appendChild(el)
-            setScrollbarHeight(el)
-            scrollbars.push(el)
+    let i = nbScrollbars
+    while(i--) {
+        let el = document.createElement('u')
+        body.appendChild(el)
+        setScrollbarHeight(el)
+        if (!hasScrollbars) {
+            el.style.width = defaultWidth + 'px'
         }
-
-        return true
-    } else {
-        alert('It can\'t work since you don\'t have scrollbars.')
-
-        return false
+        scrollbars.push(el)
     }
+
 }
 
 const setScrollbarHeight = (el, value = 128) => {
@@ -97,7 +96,8 @@ window.addEventListener('resize', (e) => {
 // Play/pause on space or click
 const togglePlay = () => {
     if (audio.paused) {
-        instructions.remove()
+        let intro = document.querySelector('span')
+        intro && intro.remove()
         audio.play()
         tick()
     } else {
